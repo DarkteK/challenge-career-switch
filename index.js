@@ -12,15 +12,16 @@ async function check(blocksData, token) {
     const validateBlocksURL = new URL("https://rooftop-career-switch.herokuapp.com/check");
     validateBlocksURL.searchParams.set('token', token);
 
-    for (var i = 0; i < 1; i++) { //blocksData.length
+    for (var i = 0; i < blocksData.length; i++) {
       let firstString = blocksData[i];
       stringBlocks.push(await joinBlocksData(firstString, blocksData, validateBlocksURL));
     }
-    console.log("AQUIIII1");
-    console.log(stringBlocks);
 
-    let stringBlocksOrdered = orderBlocks(stringBlocks);
-    console.log(stringBlocksOrdered);
+    let stringBlocksOrdered = [stringBlocks[0][0]];
+
+    for(let i = 0; i < stringBlocks.length-1; i++) {
+      stringBlocksOrdered.push(orderBlocks(stringBlocks, stringBlocksOrdered.at(-1)));
+    }
 
     return stringBlocksOrdered;
 
@@ -31,11 +32,7 @@ async function check(blocksData, token) {
 
 async function joinBlocksData(stringBlock, arrayBlock, validateBlocksURL) {
   for(let i = 0; i < arrayBlock.length; i++) {
-    /*
-    console.log(stringBlock);
-    console.log(arrayBlock[i]);
-    console.log(i);
-*/
+
     if(arrayBlock[i] === stringBlock) {
       continue;
     }
@@ -44,12 +41,12 @@ async function joinBlocksData(stringBlock, arrayBlock, validateBlocksURL) {
     let messageValidated = await validateStringBlocks(validateBlocksURL, _data);
 
     if (messageValidated) {
-      return {[stringBlock]: arrayBlock[i]};
+      return [stringBlock, arrayBlock[i]];
     }
 
   }
   // If we don't find any match, it means that's the last string.
-  return {[stringBlock]: stringBlock};
+  return [stringBlock, stringBlock];
 
 }
 
@@ -61,32 +58,32 @@ async function validateStringBlocks(validateBlocksURL, _data) {
   })
     .then(response => response.json())
     .then(json => json.message)
-    .catch(err => false);
+    .catch(() => false);
 }
 
 function orderBlocks(stringBlocks, string){
-  let returnBlocks = [];
-  for(var i in stringBlocks){
-    console.log(i); // alerts key
-    console.log(stringBlocks[i]); // alerts key
-  }
+  let returnBlocks = '';
 
-
-  stringBlocks.forEach((element, index) => {
-    console.log("canto");
-    console.log(element);
-
-    if (!string) {
-      returnBlocks.push(index);
-      returnBlocks.push(orderBlocks(stringBlocks, element));
-    } else {
-      if (index === string) {
-        returnBlocks.push(index);
-        returnBlocks.push(orderBlocks(stringBlocks, element));
-      }
+  for(let i = 0; i < stringBlocks.length; i++){
+    if (stringBlocks[i][0] === string) {
+       return returnBlocks = stringBlocks[i][1];
     }
-  })
-  return returnBlocks;
+  }
 }
 
-console.log(await check(getBlocks, tokenKey));
+async function validateEncodedString(result, tokenKey) {
+  let _data = {encoded: result.join('')};
+  let validateBlocksURL = new URL("https://rooftop-career-switch.herokuapp.com/check");
+  validateBlocksURL.searchParams.set('token', tokenKey);
+
+  let resultCheck = await validateStringBlocks(await validateBlocksURL, _data);
+  if (await resultCheck) {
+    return "Entire String was validated properly";
+  } else {
+    return "Entire String was not validated properly";
+  }
+}
+
+let result = await check(getBlocks, tokenKey);
+let checkingMessage = await validateEncodedString(await result, tokenKey);
+console.log(checkingMessage);

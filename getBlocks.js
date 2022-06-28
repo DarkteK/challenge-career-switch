@@ -5,7 +5,7 @@ const tokenKey = await getToken();
 blocksURL.searchParams.set('token', tokenKey);
 
 // Fetch blocks data from the endpoint.
-let getBlocks =  await fetch(blocksURL)
+let getBlocks = await fetch(blocksURL)
   .then(function(response) {
     if (response.status === 200) {
       return response.json();
